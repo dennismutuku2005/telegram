@@ -154,7 +154,7 @@ const statusUrl = 'https://backend.payhero.co.ke/api/v2/transaction-status';
         }
       } catch (error) {
         console.error('Error initiating payment:', error.response ? error.response.data : error.message);
-        bot.sendMessage(chatId, 'An error occurred during the payment process.');
+        bot.sendMessage(chatId, 'Payment STK push failed');
       }
     });
   });
