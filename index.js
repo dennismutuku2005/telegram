@@ -182,13 +182,17 @@ async function fetchTransactionStatus(reference, chatId, client, userId, amount,
         const channelId = '-1002202617627'; // Replace with your private channel ID
         const privateChannel = await client.getEntity(channelId);
 
+        // Resolve the user entity before inviting to the channel
+        const userEntity = await client.getEntity(userId);
+
         // Add the user directly to the channel after successful payment
         await client.invoke(
           new Api.channels.InviteToChannel({
             channel: privateChannel,
-            users: [userId],
+            users: [userEntity],  // Use the resolved entity
           })
         );
+        
         // Calculate the expiration time
         const expirationTime = new Date();
         expirationTime.setMinutes(expirationTime.getMinutes() + duration);
@@ -203,7 +207,7 @@ async function fetchTransactionStatus(reference, chatId, client, userId, amount,
           await client.invoke(
             new Api.channels.EditBanned({
               channel: privateChannel,
-              participant: userId,
+              participant: userEntity,  // Ban the resolved user entity
               bannedRights: new Api.ChatBannedRights({
                 untilDate: 0, // Ban forever after time expires
                 viewMessages: true, // Ban them from viewing messages
@@ -246,6 +250,7 @@ async function fetchTransactionStatus(reference, chatId, client, userId, amount,
     }
   }
 }
+
 
 app.get('/', (req, res) => {
   res.send('Hello World!');
