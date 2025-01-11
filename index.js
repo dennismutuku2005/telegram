@@ -244,14 +244,18 @@ async function fetchTransactionStatus(reference, chatId, client, userId, amount,
         break;
       }
     } catch (error) {
-      console.error('Error fetching transaction status:', error.response ? error.response.data : error.message);
+      console.error('Error fetching transaction status:', error);
+      bot.sendMessage(chatId, 'Error occurred while checking payment status.');
+      break;
     }
   }
 }
 
-// Start the Express server
-app.listen(PORT, () => {
-  console.log(`Server started on port ${PORT}`);
+
+app.get('/', (req, res) => {
+  res.send('Hello World!');
 });
 
-
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
