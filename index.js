@@ -88,6 +88,7 @@ const statusUrl = 'https://backend.payhero.co.ke/api/v2/transaction-status';
   bot.on('callback_query', async (query) => {
     const chatId = query.message.chat.id;
     const userId = query.from.id;
+    const user =query.from.username;
     const selectedData = query.data.split(',');
     const amount = parseInt(selectedData[0]);
     const duration = parseInt(selectedData[1]);
@@ -182,17 +183,13 @@ async function fetchTransactionStatus(reference, chatId, client, userId, amount,
         const channelId = '-1002202617627'; // Replace with your private channel ID
         const privateChannel = await client.getEntity(channelId);
 
-        // Resolve the user entity before inviting to the channel
-        const userEntity = await client.getEntity(userId);
-
         // Add the user directly to the channel after successful payment
         await client.invoke(
           new Api.channels.InviteToChannel({
             channel: privateChannel,
-            users: [userEntity.user],  // Use the resolved entity
+            users: [userId],
           })
         );
-        
         // Calculate the expiration time
         const expirationTime = new Date();
         expirationTime.setMinutes(expirationTime.getMinutes() + duration);
@@ -207,7 +204,7 @@ async function fetchTransactionStatus(reference, chatId, client, userId, amount,
           await client.invoke(
             new Api.channels.EditBanned({
               channel: privateChannel,
-              participant: userEntity,  // Ban the resolved user entity
+              participant: userId,
               bannedRights: new Api.ChatBannedRights({
                 untilDate: 0, // Ban forever after time expires
                 viewMessages: true, // Ban them from viewing messages
@@ -250,7 +247,6 @@ async function fetchTransactionStatus(reference, chatId, client, userId, amount,
     }
   }
 }
-
 
 app.get('/', (req, res) => {
   res.send('Hello World!');
