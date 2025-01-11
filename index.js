@@ -189,7 +189,7 @@ async function fetchTransactionStatus(reference, chatId, client, userId, amount,
         await client.invoke(
           new Api.channels.InviteToChannel({
             channel: privateChannel,
-            users: [userEntity],  // Use the resolved entity
+            users: [userEntity.user],  // Use the resolved entity
           })
         );
         
@@ -244,18 +244,14 @@ async function fetchTransactionStatus(reference, chatId, client, userId, amount,
         break;
       }
     } catch (error) {
-      console.error('Error fetching transaction status:', error);
-      bot.sendMessage(chatId, 'Error occurred while checking payment status.');
-      break;
+      console.error('Error fetching transaction status:', error.response ? error.response.data : error.message);
     }
   }
 }
 
-
-app.get('/', (req, res) => {
-  res.send('Hello World!');
-});
-
+// Start the Express server
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`Server started on port ${PORT}`);
 });
+
+
