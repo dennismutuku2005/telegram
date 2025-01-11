@@ -93,6 +93,31 @@ const statusUrl = 'https://backend.payhero.co.ke/api/v2/transaction-status';
       return bot.sendMessage(chatId, 'You have canceled the action. Type /start to begin again.');
     }
 
+    if (selectedData[0] === 'start') {
+      // Show the payment options again
+      const paymentOptions = {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              { text: '2 minutes - Ksh 6', callback_data: '6,2' },
+              { text: '3 minutes - Ksh 10', callback_data: '10,3' }
+            ],
+            [
+              { text: '5 minutes - Ksh 15', callback_data: '15,5' },
+              { text: '20 minutes - Ksh 30', callback_data: '30,20' }
+            ],
+            [
+              { text: '1.5 hours - Ksh 50', callback_data: '50,90' }
+            ],
+            [{ text: 'Cancel', callback_data: 'cancel' }]
+          ],
+        },
+      };
+
+      bot.sendMessage(chatId, 'Welcome back! Choose a time plan to proceed with payment:', paymentOptions);
+      return;
+    }
+
     // Request for the user to enter their mobile number
     bot.sendMessage(chatId, 'Please enter your mobile number to proceed with payment:');
     bot.once('message', async (message) => {
@@ -103,7 +128,7 @@ const statusUrl = 'https://backend.payhero.co.ke/api/v2/transaction-status';
       const requestBody = {
         amount: amount,
         phone_number: userPhoneNumber,
-        channel_id: 1045, 
+        channel_id: 1045,
         provider: 'm-pesa',
         external_reference: `INV-${new Date().getTime()}`, // Unique invoice reference
         callback_url: 'https://your-callback-url.com', // Replace with your actual callback URL
