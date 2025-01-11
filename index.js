@@ -118,12 +118,12 @@ const statusUrl = 'https://backend.payhero.co.ke/api/v2/transaction-status';
         },
       };
 
-      bot.sendMessage(chatId, 'Welcome back! Choose a time plan to proceed with payment:', paymentOptions);
+      bot.sendMessage(chatId, 'Welcome back! Choose a time plan to proceed with payment', paymentOptions);
       return;
     }
 
     // Request for the user to enter their mobile number
-    bot.sendMessage(chatId, 'Please enter your mobile number to proceed with payment:');
+    bot.sendMessage(chatId, 'Please enter your mobile number to proceed with payment');
     bot.once('message', async (message) => {
       const userPhoneNumber = message.text;
 
@@ -195,8 +195,7 @@ async function fetchTransactionStatus(reference, chatId, client, userId, amount,
         expirationTime.setMinutes(expirationTime.getMinutes() + duration);
         
         // Display expiration time to the user
-        const expirationMessage = `You have been added to the channel for ${duration} minutes.
-        Your subscription will expire on ${expirationTime.toLocaleString()}.`;
+        const expirationMessage = `You have been added to the channel for ${duration} minutes.Your subscription will expire on ${expirationTime.toLocaleString()}.`;
         bot.sendMessage(chatId, expirationMessage);
 
         // Start the timer to kick the user after the paid time ends
