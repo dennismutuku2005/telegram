@@ -149,6 +149,7 @@ async function fetchTransactionStatus(reference, chatId, client, userId, amount,
         break;
       } else if (data.status === 'FAILED') {
         bot.sendMessage(chatId, 'Payment failed.');
+        
         break;
       }
     } catch (error) {
