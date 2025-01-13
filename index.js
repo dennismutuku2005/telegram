@@ -150,38 +150,31 @@ let client;
 
 // Payment callback endpoint to update payment status
 app.post('/payment-callback', async (req, res) => {
+  console.log(req.body)
   const { CheckoutRequestID } = req.body.response;
-  console.log(req.body);
-  console.log(`Callback received for CheckoutRequestID: ${CheckoutRequestID}`);
+
+  const check = CheckoutRequestID;
+  console.log(`Callback received for CheckoutRequestID: ${check}`);
 
   // Check if a callback URL is present and if the payment reference exists
-  if (!CheckoutRequestID) {
-    return res.status(400).send({ status: 'failed' });
-  }
+  if (check) {
+    const paymentData = pendingPayments[check];
+    console.log(`${paymentData} is here`)
 
-  const paymentData = pendingPayments[CheckoutRequestID];
+    // Perform the user addition operation if the status is successful
 
-  if (!paymentData) {
-    console.log('No pending payment found for CheckoutRequestID:', CheckoutRequestID);
-    return res.status(400).send({ status: 'failed' });
-  }
-
-  try {
-    // Perform the user addition operation after successful payment
     bot.sendMessage(paymentData.chatId, 'Payment successful! You now have access to the channel.');
     paymentData.status = 'completed';
 
     const channelId = '-1002262212076'; // Replace with your private channel ID
     const privateChannel = await client.getEntity(channelId);
-
     // Resolve the user entity before inviting to the channel
     const userEntity = await client.getEntity(paymentData.userId);
-
     // Add the user to the channel after successful payment
     await client.invoke(
       new Api.channels.InviteToChannel({
         channel: privateChannel,
-        users: [userEntity], // Use resolved entity here
+        users: [userEntity]
       })
     );
 
@@ -219,9 +212,8 @@ app.post('/payment-callback', async (req, res) => {
     }, paymentData.duration * 60 * 1000); // Convert minutes to milliseconds
 
     delete pendingPayments[CheckoutRequestID];
-  } catch (error) {
-    console.error('Error processing payment callback:', error);
-    bot.sendMessage(paymentData.chatId, 'Error processing payment. Please try again.');
+  } else {
+    bot.sendMessage(paymentData.chatId, 'Payment failed. Please try again. /start');
     paymentData.status = 'failed';
   }
 
