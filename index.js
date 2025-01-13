@@ -19,20 +19,23 @@ const bot = new TelegramBot(botToken, { polling: true });
 
 // Pending payments object to track payment status by external reference
 let pendingPayments = {};
-
-const generateBasicAuthToken = () => {
-  const apiUsername = '0hsXykykIC9lX7D7omlq';
-  const apiPassword = 'HPEBjDHxA0bWmzCvwlKmrML0Pxu5N2bQfLpvbq6f';
-  
-  const credentials = `${apiUsername}:${apiPassword}`;
-  return 'Basic ' + Buffer.from(credentials).toString('base64');
-};
-
+//cat
 // API URL
 const paymentUrl = 'https://backend.payhero.co.ke/api/v2/payments';
 
 // Express setup
 app.use(express.json());
+
+// Load session from file
+let sessionString = '';
+if (fs.existsSync('session.txt')) {
+  sessionString = fs.readFileSync('session.txt', 'utf8');
+}
+
+// Initialize the Telegram client with the session from file
+const client = new TelegramClient(new StringSession(sessionString), api_id, api_hash, {
+  connectionRetries: 5,
+});
 
 // Main menu and inline keyboard setup for payment options
 bot.onText(/\/start/, async (msg) => {
@@ -132,49 +135,61 @@ app.post('/payment-callback', async (req, res) => {
         bot.sendMessage(paymentData.chatId, 'Payment successful! You now have access to the channel.');
         paymentData.status = 'completed'; 
         const channelId = '-2262212076'; // Replace with your private channel ID
-        const privateChannel = await client.getEntity(channelId);
 
-        // Add the user directly to the channel after successful payment
-        await client.invoke(
-          new Api.channels.InviteToChannel({
-            channel: privateChannel,
-            users: [userId],
-          })
-        );
-        // Calculate the expiration time
-        const expirationTime = new Date();
-        expirationTime.setMinutes(expirationTime.getMinutes() + duration);
-        
-        // Display expiration time to the user
-        const expirationMessage = `You have been added to the channel for ${duration} minutes. Your subscription will expire on ${expirationTime.toLocaleString()}.`;
-        bot.sendMessage(paymentData.chatId, expirationMessage);
+        // Ensure the client is ready before invoking methods
+        if (client.isConnected()) {
+          try {
+            const privateChannel = await client.getEntity(channelId);
 
-        // Start the timer to kick the user after the paid time ends
-        setTimeout(async () => {
-          await client.invoke(
-            new Api.channels.EditBanned({
-              channel: privateChannel,
-              participant: userId,
-              bannedRights: new Api.ChatBannedRights({
-                untilDate: 0, // Ban forever after time expires
-                viewMessages: true, // Ban them from viewing messages
-              }),
-            })
-          );
+            // Add the user directly to the channel after successful payment
+            await client.invoke(
+              new Api.channels.InviteToChannel({
+                channel: privateChannel,
+                users: [paymentData.chatId], // Replace with the user ID
+              })
+            );
 
-          // Send a message with an inline button to restart the process
-          const startButton = {
-            reply_markup: {
-              inline_keyboard: [
-                [
-                  { text: 'Start Again', callback_data: 'start' }
-                ]
-              ]
-            }
-          };
+            // Calculate the expiration time
+            const expirationTime = new Date();
+            expirationTime.setMinutes(expirationTime.getMinutes() + duration);
+            
+            // Display expiration time to the user
+            const expirationMessage = `You have been added to the channel for ${duration} minutes. Your subscription will expire on ${expirationTime.toLocaleString()}.`;
+            bot.sendMessage(paymentData.chatId, expirationMessage);
 
-          bot.sendMessage(paymentData.chatId, `Your access to the channel has expired. You have been banned from viewing messages.`, startButton);
-        }, duration * 60 * 1000); // Convert minutes to milliseconds
+            // Start the timer to kick the user after the paid time ends
+            setTimeout(async () => {
+              await client.invoke(
+                new Api.channels.EditBanned({
+                  channel: privateChannel,
+                  participant: paymentData.chatId, // Replace with the user ID
+                  bannedRights: new Api.ChatBannedRights({
+                    untilDate: 0, // Ban forever after time expires
+                    viewMessages: true, // Ban them from viewing messages
+                  }),
+                })
+              );
+
+              // Send a message with an inline button to restart the process
+              const startButton = {
+                reply_markup: {
+                  inline_keyboard: [
+                    [
+                      { text: 'Start Again', callback_data: 'start' }
+                    ]
+                  ]
+                }
+              };
+
+              bot.sendMessage(paymentData.chatId, `Your access to the channel has expired. You have been banned from viewing messages.`, startButton);
+            }, duration * 60 * 1000);
+            delete pendingPayments[ExternalReference]; // Convert minutes to milliseconds
+          } catch (error) {
+            console.error('Error adding user to channel:', error);
+          }
+        } else {
+          console.log("Telegram client is not connected!");
+        }
       } else {
         // Payment failed
         bot.sendMessage(paymentData.chatId, 'Payment failed. Please try again.');
@@ -182,12 +197,29 @@ app.post('/payment-callback', async (req, res) => {
       }
     } else {
       console.log(`No pending payment found for reference: ${ExternalReference}`);
+      delete pendingPayments[ExternalReference];
     }
   } else {
     bot.sendMessage(paymentData.chatId, 'Payment failed. Please try again. /start');
   }
 
   res.send({ status: 'received' });
+});
+
+// Start the Telegram client
+client.start({
+  phoneNumber: async () => {
+    return input.text('Please enter your phone number: ');
+  },
+  password: async () => {
+    return input.text('Please enter your password: ');
+  },
+  phoneCode: async () => {
+    return input.text('Please enter the code you received: ');
+  },
+  onError: (err) => console.log(err),
+}).then(() => {
+  console.log('Telegram client started.');
 });
 
 // Start the server to handle callbacks
