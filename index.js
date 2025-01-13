@@ -149,12 +149,12 @@ let client;
 
 // Payment callback endpoint to update payment status
 app.post('/payment-callback', async (req, res) => {
-  try {
-    const { MpesaReceiptNumber, Status, CheckoutRequestID, callback_url } = req.body.response;
+  console.log(req.body)
+    const { MpesaReceiptNumber, CheckoutRequestID } = req.body.response;
     console.log(`Callback received for CheckoutRequestID: ${CheckoutRequestID}`);
 
     // Check if a callback URL is present and if the payment reference exists
-    if (callback_url && MpesaReceiptNumber && CheckoutRequestID && pendingPayments[CheckoutRequestID]) {
+    if (MpesaReceiptNumber && CheckoutRequestID && pendingPayments[CheckoutRequestID]) {
       const paymentData = pendingPayments[CheckoutRequestID];
 
       // Perform the user addition operation if the status is successful
@@ -214,9 +214,6 @@ app.post('/payment-callback', async (req, res) => {
     } else {
       console.log('Callback URL missing or no pending payment found for this reference.');
     }
-  } catch (error) {
-    console.log('Error processing payment callback:', error);
-  }
 
   res.send({ status: 'received' });
 });
