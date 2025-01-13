@@ -200,7 +200,7 @@ app.post('/payment-callback', async (req, res) => {
       delete pendingPayments[ExternalReference];
     }
   } else {
-    bot.sendMessage(paymentData.chatId, 'Payment failed. Please try again. /start');
+    bot.sendMessage(paymentData.chatId, 'Payment failed. Please try again./start');
   }
 
   res.send({ status: 'received' });
