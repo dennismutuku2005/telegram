@@ -158,8 +158,8 @@ app.post('/payment-callback', async (req, res) => {
       const paymentData = pendingPayments[CheckoutRequestID];
       console.log(`${paymentData} is here`)
 
-      // Perform the user addition operation if the status is successful
-      if (Status === 'Success') {
+       // Perform the user addition operation if the status is successful
+      
         bot.sendMessage(paymentData.chatId, 'Payment successful! You now have access to the channel.');
         paymentData.status = 'completed';
 
@@ -212,9 +212,6 @@ app.post('/payment-callback', async (req, res) => {
         bot.sendMessage(paymentData.chatId, 'Payment failed. Please try again.');
         paymentData.status = 'failed';
       }
-    } else {
-      console.log('Callback URL missing or no pending payment found for this reference.');
-    }
 
   res.send({ status: 'received' });
 });
