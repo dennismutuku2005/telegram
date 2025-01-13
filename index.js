@@ -14,6 +14,9 @@ const api_hash = 'b0fddf704ea08516edc1c7e83bc3728e';
 const bot = new TelegramBot(botToken, { polling: true });
 const app = express(); // Ensure Express app is initialized
 
+app.use(express.json());
+
+
 // Pending payments object to track payment status by external reference
 let pendingPayments = {};
 
