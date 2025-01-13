@@ -150,71 +150,80 @@ let client;
 
 // Payment callback endpoint to update payment status
 app.post('/payment-callback', async (req, res) => {
-  console.log(req.body)
-    const { CheckoutRequestID } = req.body.response;
+  const { CheckoutRequestID } = req.body.response;
+  console.log(req.body);
+  console.log(`Callback received for CheckoutRequestID: ${CheckoutRequestID}`);
 
-    const check = CheckoutRequestID;
-    console.log(`Callback received for CheckoutRequestID: ${check}`);
+  // Check if a callback URL is present and if the payment reference exists
+  if (!CheckoutRequestID) {
+    return res.status(400).send({ status: 'failed' });
+  }
 
-    // Check if a callback URL is present and if the payment reference exists
-    if (check) {
-      const paymentData = pendingPayments[check];
-      console.log(`${paymentData} is here`)
+  const paymentData = pendingPayments[CheckoutRequestID];
 
-       // Perform the user addition operation if the status is successful
-      
-        bot.sendMessage(paymentData.chatId, 'Payment successful! You now have access to the channel.');
-        paymentData.status = 'completed';
+  if (!paymentData) {
+    console.log('No pending payment found for CheckoutRequestID:', CheckoutRequestID);
+    return res.status(400).send({ status: 'failed' });
+  }
 
-        const channelId = '-1002262212076'; // Replace with your private channel ID
-        const privateChannel = await client.getEntity(channelId);
+  try {
+    // Perform the user addition operation after successful payment
+    bot.sendMessage(paymentData.chatId, 'Payment successful! You now have access to the channel.');
+    paymentData.status = 'completed';
 
-        // Add the user to the channel after successful payment
-        await client.invoke(
-          new Api.channels.InviteToChannel({
-            channel: privateChannel,
-            users: [paymentData.userId],
-          })
-        );
+    const channelId = '-1002262212076'; // Replace with your private channel ID
+    const privateChannel = await client.getEntity(channelId);
 
-        // Calculate expiration time
-        const expirationTime = new Date();
-        expirationTime.setMinutes(expirationTime.getMinutes() + paymentData.duration);
+    // Resolve the user entity before inviting to the channel
+    const userEntity = await client.getEntity(paymentData.userId);
 
-        // Display expiration time to the user
-        const expirationMessage = `You have been added to the channel for ${paymentData.duration} minutes. Your subscription will expire on ${expirationTime.toLocaleString()}.`;
-        bot.sendMessage(paymentData.chatId, expirationMessage);
+    // Add the user to the channel after successful payment
+    await client.invoke(
+      new Api.channels.InviteToChannel({
+        channel: privateChannel,
+        users: [userEntity], // Use resolved entity here
+      })
+    );
 
-        // Start timer to remove user after their time expires
-        setTimeout(async () => {
-          await client.invoke(
-            new Api.channels.EditBanned({
-              channel: privateChannel,
-              participant: paymentData.userId,
-              bannedRights: new Api.ChatBannedRights({
-                untilDate: 0,
-                viewMessages: true,
-              }),
-            })
-          );
+    // Calculate expiration time
+    const expirationTime = new Date();
+    expirationTime.setMinutes(expirationTime.getMinutes() + paymentData.duration);
 
-          // Notify user that access has expired
-          const startButton = {
-            reply_markup: {
-              inline_keyboard: [
-                [{ text: 'Start Again', callback_data: 'start' }]
-              ]
-            }
-          };
+    // Display expiration time to the user
+    const expirationMessage = `You have been added to the channel for ${paymentData.duration} minutes. Your subscription will expire on ${expirationTime.toLocaleString()}.`;
+    bot.sendMessage(paymentData.chatId, expirationMessage);
 
-          bot.sendMessage(paymentData.chatId, `Your access to the channel has expired. You have been banned from viewing messages.`, startButton);
-        }, paymentData.duration * 60 * 1000); // Convert minutes to milliseconds
+    // Start timer to remove user after their time expires
+    setTimeout(async () => {
+      await client.invoke(
+        new Api.channels.EditBanned({
+          channel: privateChannel,
+          participant: paymentData.userId,
+          bannedRights: new Api.ChatBannedRights({
+            untilDate: 0,
+            viewMessages: true,
+          }),
+        })
+      );
 
-        delete pendingPayments[CheckoutRequestID];
-      } else {
-        bot.sendMessage(paymentData.chatId, 'Payment failed. Please try again. /start');
-        paymentData.status = 'failed';
-      }
+      // Notify user that access has expired
+      const startButton = {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: 'Start Again', callback_data: 'start' }]
+          ]
+        }
+      };
+
+      bot.sendMessage(paymentData.chatId, `Your access to the channel has expired. You have been banned from viewing messages.`, startButton);
+    }, paymentData.duration * 60 * 1000); // Convert minutes to milliseconds
+
+    delete pendingPayments[CheckoutRequestID];
+  } catch (error) {
+    console.error('Error processing payment callback:', error);
+    bot.sendMessage(paymentData.chatId, 'Error processing payment. Please try again.');
+    paymentData.status = 'failed';
+  }
 
   res.send({ status: 'received' });
 });
