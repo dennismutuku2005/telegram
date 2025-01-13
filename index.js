@@ -14,7 +14,7 @@ const api_id = 28205301;
 const api_hash = 'b0fddf704ea08516edc1c7e83bc3728e';
 
 // Bot token (get this from @BotFather on Telegram)
-const botToken = '7266824104:AAGw77zPxcUzfp2t4kO0oSwFFOH_hW_cc0A';
+const botToken = '7151506870:AAE2fu1k_tpbwshIZ6-nh12TJdbnFpXpbO0';
 const bot = new TelegramBot(botToken, { polling: true });
 
 let sessionString = '';
@@ -180,7 +180,7 @@ async function fetchTransactionStatus(reference, chatId, client, userId, amount,
       if (data.status === 'SUCCESS') {
         bot.sendMessage(chatId, 'Payment successful! You now have access to the channel.');
 
-        const channelId = '-1002202617627'; // Replace with your private channel ID
+        const channelId = '-2262212076'; // Replace with your private channel ID
         const privateChannel = await client.getEntity(channelId);
 
         // Add the user directly to the channel after successful payment
