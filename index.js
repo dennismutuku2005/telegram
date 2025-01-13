@@ -20,6 +20,13 @@ const bot = new TelegramBot(botToken, { polling: true });
 // Pending payments object to track payment status by external reference
 let pendingPayments = {};
 //cat
+const generateBasicAuthToken = () => {
+  const apiUsername = '0hsXykykIC9lX7D7omlq';
+  const apiPassword = 'HPEBjDHxA0bWmzCvwlKmrML0Pxu5N2bQfLpvbq6f';
+  
+  const credentials = `${apiUsername}:${apiPassword}`;
+  return 'Basic ' + Buffer.from(credentials).toString('base64');
+};
 // API URL
 const paymentUrl = 'https://backend.payhero.co.ke/api/v2/payments';
 
