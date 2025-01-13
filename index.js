@@ -5,11 +5,6 @@ const axios = require('axios');
 const TelegramBot = require('node-telegram-bot-api');
 const fs = require('fs');
 const input = require('input');
-const { StringSession } = require('telegram/sessions');
-const { TelegramClient } = require('telegram');
-const { Api } = require('telegram');
-const app = express();
-const PORT = process.env.PORT || 3000;
 
 // Replace with your actual API credentials for Telegram
 const api_id = 28205301;
@@ -41,8 +36,14 @@ try {
 } catch (err) {
   console.log('No previous session found, starting a new login session...');
 }
+let chatId;
+let userId;
+let user;
+let selectedData;
+let amount ;
+let duration;
 
-const stringSession = new StringSession(sessionString);
+let stringSession = new StringSession(sessionString);
 
 (async () => {
   console.log('Loading Telegram client...');
@@ -92,12 +93,12 @@ const stringSession = new StringSession(sessionString);
   });
 
   bot.on('callback_query', async (query) => {
-    const chatId = query.message.chat.id;
-    const userId = query.from.id;
-    const user = query.from.username;
-    const selectedData = query.data.split(',');
-    const amount = parseInt(selectedData[0]);
-    const duration = parseInt(selectedData[1]);
+    chatId = query.message.chat.id;
+    userId = query.from.id;
+    user = query.from.username;
+    selectedData = query.data.split(',');
+    amount = parseInt(selectedData[0]);
+    duration = parseInt(selectedData[1]);
 
     if (selectedData[0] === 'cancel') {
       return bot.sendMessage(chatId, 'You have canceled the action. Type /start to begin again.');
@@ -152,8 +153,7 @@ const stringSession = new StringSession(sessionString);
           }
         });
 
-        const reference = response.data.reference;
-        console.log(response);
+        const reference = response.data.CheckoutRequestID;
         console.log(reference);
 
         if (reference) {
@@ -180,7 +180,7 @@ app.post('/payment-callback', async (req, res) => {
   const timeout = setTimeout(() => {
     // If no data is received within 10 seconds, notify the user that the payment failed
     bot.sendMessage(chatId, 'Payment failed. Please try again later.');
-    paymentData.status = 'failed'; // Update status to failed if no callback received
+
     console.log('Payment callback timed out.');
   }, 10000); // 10 seconds timeout
 
@@ -189,6 +189,7 @@ app.post('/payment-callback', async (req, res) => {
     // Check if the callback data is already available
     if (req.body) {
       clearTimeout(timeout); // Clear the timeout if callback data is received immediately
+      console.log(req.body);
       resolve(req.body); // Resolve the promise with the callback data
     } else {
       reject('Callback data not received');
@@ -199,14 +200,14 @@ app.post('/payment-callback', async (req, res) => {
     const callbackData = await processPayment; // Wait for the callback data
 
     // Extract necessary fields from the callback data
-    const { MpesaReceiptNumber, Status, ExternalReference } = callbackData.response;
-    console.log(`Callback received for ExternalReference: ${ExternalReference}`);
+    const { MpesaReceiptNumber, Status, CheckoutRequestID } = callbackData.response;
+    console.log(`Callback received for ExternalReference: ${CheckoutRequestID}`);
 
-    if (MpesaReceiptNumber && ExternalReference) {
+    if (MpesaReceiptNumber && CheckoutRequestID) {
       // Check if the payment is in the pending payments object
-      if (pendingPayments[ExternalReference]) {
-        const paymentData = pendingPayments[ExternalReference];
-        console.log(`Found pending payment for reference: ${ExternalReference}`);
+      if (pendingPayments[CheckoutRequestID]) {
+        const paymentData = pendingPayments[CheckoutRequestID];
+        console.log(`Found pending payment for reference: ${CheckoutRequestID}`);
 
         if (Status === 'Success') {
           // Payment was successful
