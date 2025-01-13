@@ -154,8 +154,9 @@ app.post('/payment-callback', async (req, res) => {
     console.log(`Callback received for CheckoutRequestID: ${CheckoutRequestID}`);
 
     // Check if a callback URL is present and if the payment reference exists
-    if (MpesaReceiptNumber && CheckoutRequestID && pendingPayments[CheckoutRequestID]) {
+    if (MpesaReceiptNumber && CheckoutRequestID) {
       const paymentData = pendingPayments[CheckoutRequestID];
+      console.log(`${paymentData} is here`)
 
       // Perform the user addition operation if the status is successful
       if (Status === 'Success') {
