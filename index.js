@@ -153,6 +153,7 @@ const stringSession = new StringSession(sessionString);
         });
 
         const reference = response.data.reference;
+        console.log(response);
         console.log(reference);
 
         if (reference) {
@@ -173,9 +174,12 @@ const stringSession = new StringSession(sessionString);
 
 // Payment callback endpoint to update payment status
 app.post('/payment-callback', async (req, res) => {
+
+
+  
   const timeout = setTimeout(() => {
     // If no data is received within 10 seconds, notify the user that the payment failed
-    bot.sendMessage(paymentData.chatId, 'Payment failed. Please try again later.');
+    bot.sendMessage(chatId, 'Payment failed. Please try again later.');
     paymentData.status = 'failed'; // Update status to failed if no callback received
     console.log('Payment callback timed out.');
   }, 10000); // 10 seconds timeout
