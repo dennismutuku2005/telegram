@@ -7,7 +7,7 @@ const { StringSession } = require('telegram/sessions');
 const input = require('input');
 
 // Replace with your actual Telegram API credentials
-const botToken = '7266824104:AAGw77zPxcUzfp2t4kO0oSwFFOH_hW_cc0A';
+const botToken = '7151506870:AAE2fu1k_tpbwshIZ6-nh12TJdbnFpXpbO0';
 const api_id = 28205301;
 const api_hash = 'b0fddf704ea08516edc1c7e83bc3728e';
 
@@ -112,7 +112,7 @@ let stringSession = new StringSession(sessionString);
         channel_id: 1045,
         provider: 'm-pesa',
         external_reference: `INV-${new Date().getTime()}`, // Unique invoice reference
-        callback_url: 'https://your-server-url.com/payment-callback', // Replace with your actual callback URL
+        callback_url: 'https://telegram-30sm.onrender.com/payment-callback', // Replace with your actual callback URL
       };
 
       try {
