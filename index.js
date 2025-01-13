@@ -16,7 +16,6 @@ const app = express(); // Ensure Express app is initialized
 
 app.use(express.json());
 
-
 // Pending payments object to track payment status by external reference
 let pendingPayments = {};
 
@@ -42,10 +41,13 @@ try {
 let chatId, userId, user, selectedData, amount, duration;
 let stringSession = new StringSession(sessionString);
 
+// Declare Telegram client as a global object
+let client;
+
 // Initialize Telegram client and login process
 (async () => {
   console.log('Loading Telegram client...');
-  const client = new TelegramClient(stringSession, api_id, api_hash, {
+  client = new TelegramClient(stringSession, api_id, api_hash, {
     connectionRetries: 5,
   });
 
