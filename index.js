@@ -73,7 +73,7 @@ bot.on('callback_query', async (query) => {
   }
 
   // Request for the user to enter their mobile number
-  bot.sendMessage(chatId, 'Please enter your mobile number to proceed with payment');
+  bot.sendMessage(chatId, 'Please enter your valid M-pesa number to proceed with payment');
   bot.once('message', async (message) => {
     const userPhoneNumber = message.text;
 
