@@ -1,4 +1,4 @@
-const botToken = '8195166190:AAEzqwcuPvJatBHt_T1T3deXg3yizRCcGfI';
+const botToken = '7151506870:AAE2fu1k_tpbwshIZ6-nh12TJdbnFpXpbO0';
 
 const express = require('express');
 const axios = require('axios');
